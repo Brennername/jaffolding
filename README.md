@@ -3,7 +3,16 @@
 A lightweight Java front-end framework that compiles to JavaScript using TeaVM.
 
 
+
+
 I don't think this readme is up to date. It was sort of a roadmap, and I have since taken a few different directions, so this is all probably outdated. My bad.
+
+
+## Demo
+
+You can view the JavaScript side of the Jaffolding framework (the Java isn't ready) at https://jaffolding-58841cf7d4df.herokuapp.com/
+
+This is a dyno, so it falls asleep after inactivity. If you are the first to visit in a while, it will have a good 1-3 second startup time. The app isn't really slow, it's just the cheap tier I pay for heroku.
 
 ## Features
 
