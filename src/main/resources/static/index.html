@@ -182,39 +182,36 @@
             background-color: rgba(255, 255, 255, 0.2);
             margin: 0 8px;
         }
-        .splash
-        {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 400px;
-            width: 400px;
-            overflow: hidden;
-            border-radius: 20px;
-
+        .image-container {
+            width: 400px; /* Set the desired width of the container */
+            height: 400px; /* Set the desired height of the container */
+            border-radius: 10px; /* Adjust the value for desired corner rounding */
+            overflow: hidden; /* This ensures the image is clipped to the rounded corners */
         }
-        .splash img
-        {
+
+            .image-container img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: cover; /* This maintains aspect ratio while scaling to fill the container */
         }
+
     </style>
 </head>
 <body>
     <div id="app">
-        <div class="desktop-wallpaper">
-       
+        <div class="desktop-wallpaper"></div>
         <div class="loading">
             <h2>Loading Jaffolding Framework...</h2>
-            <div class="splash"><img src="jaffolding_splash.png"></img></div>
+            <div class="image-container">
+                <img src="jaffolding_splash.png"></img>
+            </div>
             <p>Please wait while the application is being loaded.</p>
-
         </div>
     </div>
     
     <div id="mode-indicator" class="mode-indicator auto-hide"></div>
     
+
     <!-- Load external JS libraries first -->
     <script src="/node_modules/chart.js/dist/chart.umd.js"></script>
     <script src="/node_modules/three/build/three.min.js"></script>
