@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jaffolding - Java UI Framework</title>
+    <style>
+        body {
+            font-family: 'Ubuntu', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #2a2e32;
+            color: #e6e6e6;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        #app {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #e6e6e6;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .mode-indicator {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 100;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        /* Auto-hide after 5 seconds */
+        .mode-indicator.auto-hide {
+            animation: fadeOut 0.5s ease 5s forwards;
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 0.7; }
+            to { opacity: 0; visibility: hidden; }
+        }
+        
+        /* Desktop wallpaper */
+        .desktop-wallpaper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e2229 0%, #2d3748 100%);
+            z-index: -1;
+        }
+        
+        /* Desktop icons */
+        .desktop-icons {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 80px);
+            grid-gap: 20px;
+            z-index: 10;
+        }
+        
+        .desktop-icon {
+            width: 80px;
+            height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .desktop-icon:hover {
+            transform: scale(1.05);
+        }
+        
+        .desktop-icon:active {
+            transform: scale(0.95);
+        }
+        
+        .icon-image {
+            width: 48px;
+            height: 48px;
+            background-color: #5294e2;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .icon-label {
+            color: #e6e6e6;
+            font-size: 12px;
+            text-align: center;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* Dock/taskbar */
+        .plasma-dock {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 60px;
+            background-color: rgba(46, 52, 64, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+        
+        .dock-item {
+            width: 48px;
+            height: 48px;
+            margin: 0 6px;
+            background-color: #5294e2;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .dock-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .dock-item:active {
+            transform: translateY(0) scale(0.95);
+        }
+        
+        .dock-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            background-color: #5294e2;
+            border-radius: 50%;
+        }
+        
+        .dock-separator {
+            width: 1px;
+            height: 30px;
+            background-color: rgba(255, 255, 255, 0.2);
+            margin: 0 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="desktop-wallpaper"></div>
+        <div class="loading">
+            <h2>Loading Jaffolding Framework...</h2>
+            <p>Please wait while the application is being loaded.</p>
+        </div>
+    </div>
+    
+    <div id="mode-indicator" class="mode-indicator auto-hide"></div>
+    
+    <!-- Load external JS libraries first -->
+    <script src="/node_modules/chart.js/dist/chart.umd.js"></script>
+    <script src="/node_modules/three/build/three.min.js"></script>
+    <script src="/node_modules/gsap/dist/gsap.min.js"></script>
+    
+    <!-- Initialize the framework -->
+    <script>
+        // Detect which mode we're running in
+        fetch('/health')
+            .then(response => response.json())
+            .then(data => {
+                const modeIndicator = document.getElementById('mode-indicator');
+                modeIndicator.textContent = 'Running in: ' + data.mode;
+                modeIndicator.classList.add('auto-hide');
+            })
+            .catch(() => {
+                const modeIndicator = document.getElementById('mode-indicator');
+                modeIndicator.textContent = 'Running in: Node.js';
+                modeIndicator.classList.add('auto-hide');
+            });
+        
+        // Load core modules first, then initialize the application
+        function loadCoreModules() {
+            return new Promise((resolve, reject) => {
+                const coreModules = [
+                    '/js/jaffolding/core/Component.js',
+                    '/js/jaffolding/core/State.js',
+                    '/js/jaffolding/core/Router.js'
+                ];
+                
+                let loaded = 0;
+                
+                coreModules.forEach(url => {
+                    const script = document.createElement('script');
+                    script.src = url;
+                    script.onload = () => {
+                        loaded++;
+                        if (loaded === coreModules.length) {
+                            resolve();
+                        }
+                    };
+                    script.onerror = (error) => {
+                        console.error(`Failed to load core module: ${url}`, error);
+                        reject(error);
+                    };
+                    document.head.appendChild(script);
+                });
+            });
+        }
+        
+        // Load UI modules after core modules
+        function loadUIModules() {
+            return new Promise((resolve, reject) => {
+                const uiModules = [
+                    '/js/jaffolding/ui/Animation.js',
+                    '/js/jaffolding/ui/Button.js',
+                    '/js/jaffolding/ui/Panel.js',
+                    '/js/jaffolding/ui/Window.js',
+                    '/js/jaffolding/ui/Desktop.js',
+                    '/js/jaffolding/ui/ChartComponent.js',
+                    '/js/jaffolding/ui/DataTable.js',
+                    '/js/jaffolding/ui/Calculator.js',
+                    '/js/jaffolding/ui/MobileNavigation.js',
+                    '/js/jaffolding/ui/layout/BorderLayout.js',
+                    '/js/jaffolding/ui/layout/GridLayout.js',
+                    '/js/jaffolding/ui/AppManager.js',
+                    '/js/jaffolding/ui/BrowserWindow.js',
+                    '/js/jaffolding/ui/KDEDesktop.js'
+                ];
+                
+                let loaded = 0;
+                
+                uiModules.forEach(url => {
+                    const script = document.createElement('script');
+                    script.src = url;
+                    script.onload = () => {
+                        loaded++;
+                        if (loaded === uiModules.length) {
+                            resolve();
+                        }
+                    };
+                    script.onerror = (error) => {
+                        console.error(`Failed to load UI module: ${url}`, error);
+                        reject(error);
+                    };
+                    document.head.appendChild(script);
+                });
+            });
+        }
+        
+        // Load demo modules after UI modules
+        function loadDemoModules() {
+            return new Promise((resolve, reject) => {
+                const demoModules = [
+                    '/js/jaffolding/demos/MainPage.js',
+                    '/js/jaffolding/demos/ComponentDemo.js',
+                    '/js/jaffolding/demos/ChartDemo.js',
+                    '/js/jaffolding/demos/ThreeDemo.js',
+                    '/js/jaffolding/demos/SalesDataDemo.js',
+                    '/js/jaffolding/demos/DesktopDemo.js',
+                    '/js/jaffolding/demos/AnimationDemo.js',
+                    '/js/jaffolding/demos/CalculatorApp.js'
+                ];
+                
+                let loaded = 0;
+                
+                demoModules.forEach(url => {
+                    const script = document.createElement('script');
+                    script.src = url;
+                    script.onload = () => {
+                        loaded++;
+                        if (loaded === demoModules.length) {
+                            resolve();
+                        }
+                    };
+                    script.onerror = (error) => {
+                        console.error(`Failed to load demo module: ${url}`, error);
+                        reject(error);
+                    };
+                    document.head.appendChild(script);
+                });
+            });
+        }
+        
+        // Initialize the application
+        function initializeApp() {
+            console.log('Initializing Jaffolding application...');
+            
+            // Get the app container
+            const appElement = document.getElementById('app');
+            
+            if (appElement) {
+                // Clear loading message
+                appElement.innerHTML = '<div class="desktop-wallpaper"></div>';
+                
+                // Create the desktop environment
+                const desktop = new jaffolding.KDEDesktop(appElement);
+                
+                // Initialize the app manager
+                const appManager = new jaffolding.AppManager(desktop);
+                
+                // Register apps
+                appManager.registerApp({
+                    id: 'components',
+                    name: 'UI Components',
+                    icon: '🧩',
+                    color: '#5294e2',
+                    createWindow: () => {
+                        return appManager.createAppWindow('UI Components', jaffolding.demos.ComponentDemo.create(), {
+                            width: 800,
+                            height: 600,
+                            x: 100,
+                            y: 50
+                        });
+                    }
+                });
+                
+                appManager.registerApp({
+                    id: 'chart',
+                    name: 'Chart Demo',
+                    icon: '📊',
+                    color: '#ea4335',
+                    createWindow: () => {
+                        return appManager.createAppWindow('Chart Demo', jaffolding.demos.ChartDemo.create(), {
+                            width: 800,
+                            height: 600,
+                            x: 150,
+                            y: 100
+                        });
+                    }
+                });
+                
+                appManager.registerApp({
+                    id: 'three',
+                    name: '3D Graphics',
+                    icon: '🧊',
+                    color: '#fbbc05',
+                    createWindow: () => {
+                        return appManager.createAppWindow('3D Graphics', jaffolding.demos.ThreeDemo.create(), {
+                            width: 800,
+                            height: 600,
+                            x: 200,
+                            y: 150
+                        });
+                    }
+                });
+                
+                appManager.registerApp({
+                    id: 'sales',
+                    name: 'Sales Dashboard',
+                    icon: '📈',
+                    color: '#34a853',
+                    createWindow: () => {
+                        return appManager.createBrowserWindow('Sales Dashboard', '/sales', {
+                            width: 900,
+                            height: 700,
+                            x: 250,
+                            y: 50
+                        });
+                    }
+                });
+                
+                appManager.registerApp({
+                    id: 'animation',
+                    name: 'Animation Studio',
+                    icon: '🎬',
+                    color: '#e91e63',
+                    createWindow: () => {
+                        return appManager.createAppWindow('Animation Studio', jaffolding.demos.AnimationDemo.create(), {
+                            width: 800,
+                            height: 600,
+                            x: 300,
+                            y: 100
+                        });
+                    }
+                });
+                
+                appManager.registerApp({
+                    id: 'calculator',
+                    name: 'Calculator',
+                    icon: '🧮',
+                    color: '#673ab7',
+                    createWindow: () => {
+                        return appManager.createAppWindow('Calculator', jaffolding.demos.CalculatorApp.create(), {
+                            width: 320,
+                            height: 480,
+                            x: 400,
+                            y: 150
+                        });
+                    }
+                });
+                
+                // Create desktop icons
+                desktop.createDesktopIcons(appManager.getApps());
+                
+                // Create dock with pinned apps
+                desktop.createDock([
+                    appManager.getApp('components'),
+                    appManager.getApp('chart'),
+                    appManager.getApp('three'),
+                    appManager.getApp('sales'),
+                    appManager.getApp('calculator')
+                ]);
+                
+                // Open welcome window
+                const welcomeContent = new jaffolding.Component('div');
+                welcomeContent.setStyle('padding', '20px')
+                             .setStyle('color', '#eceff4');
+                
+                const welcomeTitle = new jaffolding.Component('h2');
+                welcomeTitle.setText('Welcome to Jaffolding Desktop')
+                           .setStyle('margin-bottom', '15px');
+                
+                const welcomeText = new jaffolding.Component('p');
+                welcomeText.setText('This is a KDE Plasma-inspired desktop environment built with the Jaffolding framework. Click on the desktop icons or dock items to launch applications.')
+                          .setStyle('line-height', '1.5')
+                          .setStyle('margin-bottom', '20px');
+                
+                const welcomeList = new jaffolding.Component('ul');
+                welcomeList.setStyle('margin-bottom', '20px')
+                          .setStyle('padding-left', '20px');
+                
+                const listItems = [
+                    'UI Components - Explore various UI components',
+                    'Chart Demo - Interactive data visualization',
+                    '3D Graphics - Three.js integration',
+                    'Sales Dashboard - Data dashboard with browser controls',
+                    'Animation Studio - Animation capabilities',
+                    'Calculator - Functional calculator application'
+                ];
+                
+                listItems.forEach(item => {
+                    const li = new jaffolding.Component('li');
+                    li.setText(item)
+                      .setStyle('margin-bottom', '8px');
+                    welcomeList.addChild(li);
+                });
+                
+                welcomeContent.addChild(welcomeTitle);
+                welcomeContent.addChild(welcomeText);
+                welcomeContent.addChild(welcomeList);
+                
+                const welcomeWindow = appManager.createAppWindow('Welcome', welcomeContent, {
+                    width: 500,
+                    height: 400,
+                    x: 200,
+                    y: 100
+                });
+                
+                desktop.addWindow(welcomeWindow);
+                
+                // Update mode indicator
+                const modeIndicator = document.getElementById('mode-indicator');
+                modeIndicator.textContent = 'Running in: JavaScript Mode';
+                
+                // Make sure the mode indicator fades out
+                setTimeout(() => {
+                    modeIndicator.style.opacity = '0';
+                    modeIndicator.style.visibility = 'hidden';
+                }, 5000);
+            }
+        }
+        
+        // Function to load JS implementation
+        function loadJSImplementation() {
+            // Load JS implementation in sequence
+            loadCoreModules()
+                .then(() => loadUIModules())
+                .then(() => loadDemoModules())
+                .then(() => initializeApp())
+                .catch(error => {
+                    console.error('Failed to load JS implementation:', error);
+                    document.getElementById('app').innerHTML = `
+                        <div class="loading">
+                            <h2>Error Loading Framework</h2>
+                            <p>There was an error loading the Jaffolding framework. Please check the console for details.</p>
+                        </div>
+                    `;
+                });
+        }
+        
+        // Try to load TeaVM first, fall back to JS implementation
+        function loadTeaVM() {
+            const script = document.createElement('script');
+            script.src = '/teavm/classes.js';
+            
+            // Listen for TeaVM load error event
+            document.addEventListener('teavm-load-error', function() {
+                console.log('TeaVM not available, loading JS implementation instead');
+                loadJSImplementation();
+            });
+            
+            // Listen for TeaVM placeholder loaded event
+            document.addEventListener('teavm-placeholder-loaded', function() {
+                console.log('TeaVM placeholder detected, loading JS implementation instead');
+                loadJSImplementation();
+            });
+            
+            script.onerror = function() {
+                console.log('TeaVM script failed to load, loading JS implementation instead');
+                loadJSImplementation();
+            };
+            
+            document.body.appendChild(script);
+            
+            // Set a timeout to ensure we don't wait forever for TeaVM
+            setTimeout(function() {
+                if (!window.$rt_javaClassesLoaded) {
+                    console.log('TeaVM timeout, loading JS implementation instead');
+                    loadJSImplementation();
+                }
+            }, 2000);
+        }
+        
+        // Start loading
+        loadTeaVM();
+        
+        // Mode indicator functionality
+        document.addEventListener("click", function() {
+            const modeIndicator = document.getElementById("mode-indicator");
+            if (modeIndicator.style.opacity === "0" || modeIndicator.style.visibility === "hidden") {
+                modeIndicator.style.opacity = "0.7";
+                modeIndicator.style.visibility = "visible";
+                
+                // Hide again after 3 seconds
+                setTimeout(function() {
+                    modeIndicator.style.opacity = "0";
+                    modeIndicator.style.visibility = "hidden";
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
