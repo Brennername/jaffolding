@@ -1,4 +1,7 @@
 # Maven
+# the java part of the app isn't ready, just gitignoring for heroku not to fail on maven build
+pom.xml
+
 target/
 pom.xml.tag
 pom.xml.releaseBackup
