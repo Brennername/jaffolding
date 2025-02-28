@@ -9,25 +9,6 @@
      * @param {KDEDesktop} desktop - The desktop instance
      */
     constructor(desktop) {
-      🧩
-      UI Components
-      📊
-      Chart Demo
-      🧊
-      3D Graphics
-      📈
-      Sales Dashboard
-      🎬
-      Animation Studio
-      🧮
-      Calculator
-      🧩
-      📊
-      🧊
-      📈
-      🧮
-      ⚙️
-      
       this.desktop = desktop;
       this.apps = {};
       this.runningApps = {};
